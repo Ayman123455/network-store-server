@@ -1,0 +1,30 @@
+# Dependency directories (تثبيت الحزم)
+node_modules/
+jspm_packages/
+
+# Environment variables & secrets (الملفات الحساسة والمفاتيح)
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+serviceAccountKey.json
+firebase-admin-key.json
+admin.html
+
+# Logs (ملفات السجلات والأخطاء)
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Operating System & IDE files (ملفات النظام والبيئة المحلية)
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Production build (مجلدات البناء إن وجدت)
+dist/
+build/
