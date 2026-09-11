@@ -1,0 +1,132 @@
+
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>لوحة تحكم المسؤول - متجر الشبكات</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: system-ui, -apple-system, sans-serif; background-color: #121212; color: #e0e0e0; margin: 0; padding: 20px; }
+    .container { max-width: 1100px; margin: 0 auto; }
+    h1 { color: #FFD700; text-align: center; margin-bottom: 30px; }
+    
+    table { width: 100%; border-collapse: collapse; background: #1E1E1E; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+    th, td { padding: 14px 18px; text-align: right; border-bottom: 1px solid #2C2C2C; }
+    th { background-color: #252525; color: #FFD700; font-size: 15px; }
+    tr:hover { background-color: #2A2A2A; }
+    
+    .status-pending { color: #FFC107; font-weight: bold; background: rgba(255, 193, 7, 0.1); padding: 4px 8px; border-radius: 4px; }
+    .status-approved { color: #4CAF50; font-weight: bold; background: rgba(76, 175, 80, 0.1); padding: 4px 8px; border-radius: 4px; }
+    .status-rejected { color: #F44336; font-weight: bold; background: rgba(244, 67, 54, 0.1); padding: 4px 8px; border-radius: 4px; }
+    
+    button { padding: 8px 14px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.2s; }
+    .btn-approve { background: #2e7d32; color: white; margin-left: 6px; }
+    .btn-approve:hover { background: #388e3c; }
+    .btn-reject { background: #c62828; color: white; }
+    .btn-reject:hover { background: #d32f2f; }
+    
+    .items-list { font-size: 13px; color: #aaa; margin: 0; padding-right: 18px; }
+  </style>
+
+  <!-- Firebase Web SDK (v9 Compat) -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+</head>
+<body>
+
+<div class="container">
+  <h1>🛡️ لوحة إدﺍﺭﺓ الطلبات (Network Store)</h1>
+  <table>
+    <thead>
+      <tr>
+        <th>رقم المرجع</th>
+        <th>رقم الهاتف</th>
+        <th>المبلغ الإجمالي</th>
+        <th>العناصر</th>
+        <th>الحالة</th>
+        <th>الإجراءات</th>
+      </tr>
+    </thead>
+    <tbody id="orders-table">
+      <tr><td colspan="6" style="text-align: center;">جاري تحميل الطلبات من Firestore...</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<script>
+  // ⚠️ أضف إعدادات مشروعك في Firebase هنا
+  const firebaseConfig = {
+  apiKey: "AIzaSyChrzccwS2QnuotKhdXBYTILJAh6uk5fys",
+  authDomain: "network-store-app.firebaseapp.com",
+  projectId: "network-store-app",
+  storageBucket: "network-store-app.firebasestorage.app",
+  messagingSenderId: "968804734687",
+  appId: "1:968804734687:web:dc41783b5a9a3244c63b6a"
+};
+
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+
+  // الاستماع المباشر للطلبات من كولكشن orders
+  db.collection('orders').orderBy('createdAt', 'desc').onSnapshot((snapshot) => {
+    const tableBody = document.getElementById('orders-table');
+    tableBody.innerHTML = '';
+
+    if (snapshot.empty) {
+      tableBody.innerHTML = '<tr><td colspan="6" style="text-align: center;">لا توجد طلبات في قاعدة البيانات حالياً</td></tr>';
+      return;
+    }
+
+    snapshot.forEach((doc) => {
+      const data = doc.data();
+      const statusClass = `status-${data.status}`;
+      const statusText = data.status === 'pending' ? 'قيد الانتظار' : (data.status === 'approved' ? 'مقبول' : 'مرفوض');
+
+      // تجهيز قائمة الكروت/العناصر
+      let itemsHtml = '<ul class="items-list">';
+      if (data.items && Array.isArray(data.items)) {
+        data.items.forEach(item => {
+          itemsHtml += `<li>${item.name || 'كرت'} (${item.price || 0} ريال)</li>`;
+        });
+      }
+      itemsHtml += '</ul>';
+
+      const row = `
+        <tr>
+          <td><strong>#${data.referenceNumber || doc.id}</strong></td>
+          <td>${data.phoneNumber || 'غير محدد'}</td>
+          <td>${data.totalAmount || 0} ريال</td>
+          <td>${itemsHtml}</td>
+          <td><span class="${statusClass}">${statusText}</span></td>
+          <td>
+            ${data.status === 'pending' ? `
+              <button class="btn-approve" onclick="updateStatus('${doc.id}', 'approved')">قبول</button>
+              <button class="btn-reject" onclick="updateStatus('${doc.id}', 'rejected')">رفض</button>
+            ` : '<span style="color:#777;">تم اتخاذ إجراء</span>'}
+          </td>
+        </tr>
+      `;
+      tableBody.innerHTML += row;
+    });
+  }, (error) => {
+    console.error("خطأ في جلب البيانات:", error);
+    document.getElementById('orders-table').innerHTML = `<tr><td colspan="6" style="text-align: center; color: red;">خطأ في الاتصال: ${error.message}</td></tr>`;
+  });
+
+  // تغيير حالة الطلب عند الضغط على أزرار القبول أو الرفض
+  function updateStatus(orderId, newStatus) {
+    db.collection('orders').doc(orderId).update({
+      status: newStatus
+    }).then(() => {
+      console.log(`تم تحديث الطلب ${orderId} إلى ${newStatus}`);
+    }).catch((error) => {
+      alert('حدث خطأ أثناء التحديث: ' + error.message);
+    });
+  }
+</script>
+
+</body>
+</html>

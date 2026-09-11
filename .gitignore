@@ -10,7 +10,7 @@ jspm_packages/
 .env.production
 serviceAccountKey.json
 firebase-admin-key.json
-admin.html
+
 
 # Logs (ملفات السجلات والأخطاء)
 logs

@@ -6,7 +6,9 @@ const path = require('path');
 const { initializeApp, cert } = require('firebase-admin/app');
 const { getFirestore } = require('firebase-admin/firestore');
 
-const serviceAccount = require('./serviceAccountKey.json');
+const serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT
+  ? JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT)
+  : require('./serviceAccountKey.json');
 
 initializeApp({
   credential: cert(serviceAccount)
@@ -14,7 +16,7 @@ initializeApp({
 
 const db = getFirestore();
 const app = express();
-const PORT = process.env.PORT || 3000;
+//const PORT = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(bodyParser.json());
@@ -136,7 +138,7 @@ app.post('/api/sms-webhook', async (req, res) => {
     return res.status(500).json({ error: 'حدث خطأ داخلي' });
   }
 });
-
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`🚀 السيرفر يعمل بنجاح على: http://localhost:${PORT}`);
   console.log(`🖥️ لوحة التحكم متاحة على: http://localhost:${PORT}/admin`);
