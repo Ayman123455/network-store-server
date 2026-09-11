@@ -16,7 +16,7 @@ initializeApp({
 
 const db = getFirestore();
 const app = express();
-const PORT = process.env.PORT || 3000;
+//const PORT = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(bodyParser.json());
@@ -138,8 +138,8 @@ app.post('/api/sms-webhook', async (req, res) => {
     return res.status(500).json({ error: 'حدث خطأ داخلي' });
   }
 });
-//const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, '0.0.0.0',()=> {
   console.log(`🚀 السيرفر يعمل بنجاح على: http://localhost:${PORT}`);
   console.log(`🖥️ لوحة التحكم متاحة على: http://localhost:${PORT}/admin`);
 });
